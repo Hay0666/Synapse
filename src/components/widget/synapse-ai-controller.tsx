@@ -7,7 +7,6 @@ import { SwipeCard } from "./swipe-card"
 import { Ranker } from "./ranker"
 import { SkeletonLoader } from "@/components/ui/skeleton-loader"
 import { useContextObserver } from "@/hooks/useContextObserver"
-import { trackEvent } from "@/lib/analytics"
 import { CheckCircle2 } from "lucide-react"
 
 interface AIResponse {
@@ -26,11 +25,16 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
 
   React.useEffect(() => {
     const payload = getPayload()
-    trackEvent("synapse_widget_opened", {
-      route: payload.route,
-      dwellTime: payload.dwellTimeSeconds,
-    })
+    if (typeof window !== "undefined" && window.pendo) {
+      window.pendo.track("synapse_widget_opened", {
+        route: payload.route,
+        dwellTime: payload.dwellTimeSeconds,
+        recentClicks: payload.recentClicks.join(", "),
+        title: payload.title,
+      })
+    }
 
+    const fetchStart = Date.now()
     fetch("/api/synapse", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -40,12 +44,16 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
       .then((data) => {
         setResponse(data)
         setLoading(false)
-        trackEvent("synapse_component_rendered", {
-          component: data.component,
-          reason: data.reason,
-        })
+        if (typeof window !== "undefined" && window.pendo) {
+          window.pendo.track("synapse_component_rendered", {
+            component: data.component,
+            reason: data.reason,
+            route: payload.route,
+            responseTimeMs: Date.now() - fetchStart,
+          })
+        }
       })
-      .catch(() => {
+      .catch((err) => {
         setResponse({
           component: "slider",
           question: "How is your experience so far?",
@@ -53,11 +61,30 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
           data: { low_label: "Poor", high_label: "Excellent" },
         })
         setLoading(false)
+        if (typeof window !== "undefined" && window.pendo) {
+          window.pendo.track("synapse_api_fallback", {
+            route: payload.route,
+            errorMessage: err?.message
+              ? String(err.message).substring(0, 100)
+              : "unknown",
+            fallbackComponent: "slider",
+            dwellTime: payload.dwellTimeSeconds,
+          })
+        }
       })
 
     return () => {
       if (!abandonedRef.current) {
-        trackEvent("synapse_abandoned", { route: payload.route })
+        if (typeof window !== "undefined" && window.pendo) {
+          window.pendo.track("synapse_abandoned", {
+            route: payload.route,
+            component: response?.component || "unknown",
+            dwellTime: payload.dwellTimeSeconds,
+            timeBeforeAbandon: Math.floor(
+              (Date.now() - fetchStart) / 1000
+            ),
+          })
+        }
       }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -65,11 +92,17 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
   const handleSubmit = (value: unknown) => {
     abandonedRef.current = true
     setSubmitted(true)
-    trackEvent("synapse_submitted", {
-      component: response?.component,
-      value,
-      timeToComplete: parseFloat((Math.random() * 3 + 0.8).toFixed(1)),
-    })
+    if (typeof window !== "undefined" && window.pendo) {
+      window.pendo.track("synapse_submitted", {
+        component: response?.component,
+        value: typeof value === "object" ? JSON.stringify(value) : String(value),
+        timeToComplete: parseFloat(
+          (Math.random() * 3 + 0.8).toFixed(1)
+        ),
+        route: window.location.pathname,
+        reason: response?.reason || "unknown",
+      })
+    }
     setTimeout(() => onClose(), 2500)
   }
 
