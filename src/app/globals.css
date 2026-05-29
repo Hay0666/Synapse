@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* ── Surfaces ────────────────────────────────── */
+  --color-void:        #000000;   /* absolute ground  */
+  --color-surface:     #0a0a0a;   /* elevated ground  */
+  --color-raised:      #111111;   /* card surface     */
+  --color-overlay:     #161616;   /* modal/panel bg   */
+
+  /* ── Borders ─────────────────────────────────── */
+  --color-border:      #27272a;   /* zinc-800         */
+  --color-border-dim:  #18181b;   /* zinc-900         */
+
+  /* ── Typography ──────────────────────────────── */
+  --color-text-primary:   #fafafa;   /* zinc-50  */
+  --color-text-secondary: #a1a1aa;   /* zinc-400 */
+  --color-text-muted:     #71717a;   /* zinc-500 */
+  --color-text-ghost:     #3f3f46;   /* zinc-700 */
+
+  /* ── Accent (pure white — flat, no glow) ─────── */
+  --color-accent:      #ffffff;
+  --color-accent-fg:   #000000;   /* text on accent buttons */
+
+  /* ── Semantic ────────────────────────────────── */
+  --color-success:     #22c55e;
+  --color-danger:      #ef4444;
+
+  /* ── Fonts ───────────────────────────────────── */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ───────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--color-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-ghost); }
+
+/* ── Range input ─────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 99px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid var(--color-void);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid var(--color-void);
+}
