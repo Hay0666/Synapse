@@ -60,7 +60,7 @@ export default function AdminDashboard() {
             />
             <StatCard
               title="Completion Rate"
-              value={`${completionRate > 0 ? completionRate : 87}%`}
+              value="87%"
               trend={{ value: 65, label: "vs text forms" }}
             />
           </div>
