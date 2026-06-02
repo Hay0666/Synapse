@@ -36,7 +36,7 @@ export default function RootLayout({
     o[m]=o[m]||function(){o._q[m===v[0]?'unshift':'push']([m].concat([].slice.call(arguments,0)));};})(v[w]);
     y=e.createElement(n);y.async=!0;y.src='https://cdn.pendo.io/agent/static/'+apiKey+'/pendo.js';
     z=e.getElementsByTagName(n)[0];z.parentNode.insertBefore(y,z);})(window,document,'script','pendo');
-})('7e7c941e-d750-4903-b3fe-d274a46fb223');
+})('ce39ba9f-1d40-40fa-8f60-56a9b38ecb05');
 `}} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-full flex`} suppressHydrationWarning>
