@@ -1,3 +1,5 @@
+"use client"
+
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
@@ -23,7 +25,28 @@ const plans = [
   },
 ]
 
+function getCurrentPlan() {
+  return plans.find((p) => p.current) || plans[0]
+}
+
 export default function BillingPage() {
+  const handlePlanAction = (targetPlan: typeof plans[number]) => {
+    if (targetPlan.current) return
+    const current = getCurrentPlan()
+    const changeType = plans.indexOf(targetPlan) > plans.indexOf(current) ? "upgrade" : "downgrade"
+
+    // Pendo Track Event: plan_changed
+    if (typeof window !== "undefined" && window.pendo) {
+      pendo.track("plan_changed", {
+        previousPlan: current.name,
+        newPlan: targetPlan.name,
+        previousPrice: current.price,
+        newPrice: targetPlan.price,
+        changeType,
+      })
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       <header className="flex h-12 items-center justify-between border-b border-zinc-900 px-6 shrink-0">
@@ -96,6 +119,7 @@ export default function BillingPage() {
                     variant={plan.current ? "outline" : "ghost"}
                     className="w-full text-xs"
                     disabled
+                    onClick={() => handlePlanAction(plan)}
                   >
                     {plan.current ? "Manage Plan" : plan.name === "Starter" ? "Downgrade" : "Upgrade"}
                   </Button>

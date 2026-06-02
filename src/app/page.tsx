@@ -1,7 +1,24 @@
+"use client"
+
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { SectionLabel } from "@/components/ui/section-label"
 
-const columns = [
+interface Task {
+  id: string
+  title: string
+  priority: string
+  assignee: string
+  date: string
+}
+
+interface Column {
+  id: string
+  title: string
+  tasks: Task[]
+}
+
+const initialColumns: Column[] = [
   {
     id: "backlog",
     title: "Backlog",
@@ -36,7 +53,58 @@ const priorityClasses: Record<string, string> = {
   Low:    "bg-zinc-900 text-zinc-600 border border-zinc-800/60",
 }
 
+function handleTaskStatusChanged(task: Task, previousColumn: string, newColumn: string) {
+  // Pendo Track Event: task_status_changed
+  if (typeof window !== "undefined" && window.pendo) {
+    pendo.track("task_status_changed", {
+      taskId: task.id,
+      taskTitle: task.title,
+      previousColumn,
+      newColumn,
+      assignee: task.assignee,
+      priority: task.priority,
+    })
+  }
+}
+
 export default function KanbanBoard() {
+  const [columns, setColumns] = useState<Column[]>(initialColumns)
+  const [draggedTask, setDraggedTask] = useState<{ task: Task; sourceColumnId: string } | null>(null)
+
+  const handleDragStart = (task: Task, sourceColumnId: string) => {
+    setDraggedTask({ task, sourceColumnId })
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (targetColumnId: string) => {
+    if (!draggedTask || draggedTask.sourceColumnId === targetColumnId) {
+      setDraggedTask(null)
+      return
+    }
+
+    const sourceCol = columns.find((c) => c.id === draggedTask.sourceColumnId)
+    const targetCol = columns.find((c) => c.id === targetColumnId)
+    if (!sourceCol || !targetCol) return
+
+    setColumns((prev) =>
+      prev.map((col) => {
+        if (col.id === draggedTask.sourceColumnId) {
+          return { ...col, tasks: col.tasks.filter((t) => t.id !== draggedTask.task.id) }
+        }
+        if (col.id === targetColumnId) {
+          return { ...col, tasks: [...col.tasks, draggedTask.task] }
+        }
+        return col
+      })
+    )
+
+    handleTaskStatusChanged(draggedTask.task, sourceCol.title, targetCol.title)
+    setDraggedTask(null)
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
@@ -55,7 +123,12 @@ export default function KanbanBoard() {
       <div className="flex-1 overflow-x-auto p-6">
         <div className="flex gap-5 h-full items-start min-w-max">
           {columns.map((column) => (
-            <div key={column.id} className="w-72 shrink-0 flex flex-col">
+            <div
+              key={column.id}
+              className="w-72 shrink-0 flex flex-col"
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(column.id)}
+            >
               {/* Column header */}
               <div className="flex items-center justify-between mb-3">
                 <SectionLabel>{column.title}</SectionLabel>
@@ -69,6 +142,8 @@ export default function KanbanBoard() {
                 {column.tasks.map((task) => (
                   <div
                     key={task.id}
+                    draggable
+                    onDragStart={() => handleDragStart(task, column.id)}
                     className="group flex flex-col gap-3 rounded-lg border border-zinc-900 bg-zinc-950 p-4 cursor-pointer hover:border-zinc-700 transition-colors duration-150 ease-out"
                   >
                     <div className="flex items-center justify-between">

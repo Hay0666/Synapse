@@ -1,5 +1,12 @@
 "use client"
 
+declare global {
+  interface Window {
+    pendo: { track: (name: string, properties?: Record<string, unknown>) => void }
+  }
+  const pendo: Window["pendo"]
+}
+
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Slider } from "./slider"
@@ -31,6 +38,16 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
       dwellTime: payload.dwellTimeSeconds,
     })
 
+    // Pendo Track Event: synapse_widget_opened
+    if (typeof window !== "undefined" && window.pendo) {
+      pendo.track("synapse_widget_opened", {
+        route: payload.route,
+        dwellTime: payload.dwellTimeSeconds,
+        pageTitle: payload.title,
+        recentClicks: payload.recentClicks.join(", "),
+      })
+    }
+
     fetch("/api/synapse", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -44,6 +61,16 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
           component: data.component,
           reason: data.reason,
         })
+
+        // Pendo Track Event: synapse_component_rendered
+        if (typeof window !== "undefined" && window.pendo) {
+          pendo.track("synapse_component_rendered", {
+            component: data.component,
+            reason: data.reason,
+            question: data.question,
+            route: payload.route,
+          })
+        }
       })
       .catch(() => {
         setResponse({
@@ -53,11 +80,28 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
           data: { low_label: "Poor", high_label: "Excellent" },
         })
         setLoading(false)
+
+        // Pendo Track Event: synapse_ai_fallback_triggered
+        if (typeof window !== "undefined" && window.pendo) {
+          pendo.track("synapse_ai_fallback_triggered", {
+            route: payload.route,
+            errorType: "api_failure",
+            fallbackComponent: "slider",
+          })
+        }
       })
 
     return () => {
       if (!abandonedRef.current) {
         trackEvent("synapse_abandoned", { route: payload.route })
+
+        // Pendo Track Event: synapse_abandoned
+        if (typeof window !== "undefined" && window.pendo) {
+          pendo.track("synapse_abandoned", {
+            route: payload.route,
+            dwellTime: payload.dwellTimeSeconds,
+          })
+        }
       }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -70,6 +114,17 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
       value,
       timeToComplete: parseFloat((Math.random() * 3 + 0.8).toFixed(1)),
     })
+
+    // Pendo Track Event: synapse_submitted
+    if (typeof window !== "undefined" && window.pendo) {
+      pendo.track("synapse_submitted", {
+        component: response?.component,
+        value: String(value),
+        timeToComplete: parseFloat((Math.random() * 3 + 0.8).toFixed(1)),
+        route: window.location.pathname,
+        question: response?.question,
+      })
+    }
     setTimeout(() => onClose(), 2500)
   }
 
