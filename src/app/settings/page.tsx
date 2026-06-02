@@ -1,7 +1,60 @@
+"use client"
+
+import { useState } from "react"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 
+const defaultPreferences = [
+  { label: "Desktop Notifications", desc: "Push notifications when assigned a task.", on: true },
+  { label: "Weekly Digest", desc: "Email summary of team velocity each Monday.", on: false },
+  { label: "Auto-assign Issues", desc: "Route unassigned issues to the last active member.", on: false },
+]
+
 export default function SettingsPage() {
+  const [workspaceName] = useState("Acme Corp")
+  const [workspaceUrl] = useState("acme")
+  const [preferences, setPreferences] = useState(defaultPreferences)
+
+  const handleSaveChanges = () => {
+    // Pendo Track Event: workspace_settings_saved
+    if (typeof window !== "undefined" && window.pendo) {
+      pendo.track("workspace_settings_saved", {
+        workspaceName,
+        workspaceUrl,
+        changedFields: "workspaceName,workspaceUrl",
+      })
+    }
+  }
+
+  const handlePreferenceToggle = (index: number) => {
+    const pref = preferences[index]
+    const newValue = !pref.on
+
+    setPreferences((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, on: newValue } : p))
+    )
+
+    // Pendo Track Event: preference_toggled
+    if (typeof window !== "undefined" && window.pendo) {
+      pendo.track("preference_toggled", {
+        preferenceName: pref.label,
+        newValue: String(newValue),
+        previousValue: String(pref.on),
+      })
+    }
+  }
+
+  const handleDeleteWorkspace = () => {
+    // Pendo Track Event: workspace_deleted
+    if (typeof window !== "undefined" && window.pendo) {
+      pendo.track("workspace_deleted", {
+        workspaceName,
+        memberCount: 8,
+        planType: "Pro",
+      })
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       <header className="flex h-12 items-center justify-between border-b border-zinc-900 px-6 shrink-0">
@@ -43,7 +96,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <Button disabled className="text-xs">Save Changes</Button>
+              <Button disabled className="text-xs" onClick={handleSaveChanges}>Save Changes</Button>
             </div>
           </div>
 
@@ -56,18 +109,16 @@ export default function SettingsPage() {
               </p>
             </div>
             <div className="md:col-span-2 space-y-0 rounded-lg border border-zinc-900 divide-y divide-zinc-900 overflow-hidden">
-              {[
-                { label: "Desktop Notifications", desc: "Push notifications when assigned a task.", on: true },
-                { label: "Weekly Digest", desc: "Email summary of team velocity each Monday.", on: false },
-                { label: "Auto-assign Issues", desc: "Route unassigned issues to the last active member.", on: false },
-              ].map(({ label, desc, on }) => (
+              {preferences.map(({ label, desc, on }, index) => (
                 <div key={label} className="flex items-center justify-between px-5 py-4">
                   <div>
                     <p className="text-sm font-medium text-zinc-200">{label}</p>
                     <p className="text-xs text-zinc-500 mt-0.5">{desc}</p>
                   </div>
                   {/* Toggle */}
-                  <div
+                  <button
+                    type="button"
+                    onClick={() => handlePreferenceToggle(index)}
                     className={`relative h-5 w-9 rounded-full border transition-colors shrink-0 ${
                       on
                         ? "bg-zinc-200 border-zinc-300"
@@ -81,7 +132,7 @@ export default function SettingsPage() {
                           : "left-0.5 bg-zinc-600"
                       }`}
                     />
-                  </div>
+                  </button>
                 </div>
               ))}
             </div>
@@ -102,7 +153,7 @@ export default function SettingsPage() {
                   Permanently deletes all data and members.
                 </p>
               </div>
-              <Button variant="danger" className="text-xs shrink-0" disabled>
+              <Button variant="danger" className="text-xs shrink-0" disabled onClick={handleDeleteWorkspace}>
                 Delete
               </Button>
             </div>
