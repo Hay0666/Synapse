@@ -1,3 +1,5 @@
+"use client"
+
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
@@ -96,6 +98,19 @@ export default function BillingPage() {
                     variant={plan.current ? "outline" : "ghost"}
                     className="w-full text-xs"
                     disabled
+                    onClick={() => {
+                      const currentPlan = plans.find((p) => p.current)
+                      if (typeof window !== "undefined" && window.pendo) {
+                        window.pendo.track("plan_upgrade_initiated", {
+                          currentPlan: currentPlan?.name || "unknown",
+                          targetPlan: plan.name,
+                          currentPrice: currentPlan?.price || "unknown",
+                          targetPrice: plan.price,
+                          seatsUsed: "8",
+                          seatsAvailable: "10",
+                        })
+                      }
+                    }}
                   >
                     {plan.current ? "Manage Plan" : plan.name === "Starter" ? "Downgrade" : "Upgrade"}
                   </Button>

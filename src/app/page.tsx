@@ -1,5 +1,21 @@
+"use client"
+
 import { Badge } from "@/components/ui/badge"
 import { SectionLabel } from "@/components/ui/section-label"
+
+/** Track a task move between Kanban columns via Pendo. Call when drag-and-drop is implemented. */
+function trackTaskMoved(task: { id: string; title: string; priority: string; assignee: string }, sourceColumn: string, destinationColumn: string) {
+  if (typeof window !== "undefined" && window.pendo) {
+    window.pendo.track("task_moved", {
+      taskId: task.id,
+      taskTitle: task.title,
+      sourceColumn,
+      destinationColumn,
+      priority: task.priority,
+      assignee: task.assignee,
+    })
+  }
+}
 
 const columns = [
   {

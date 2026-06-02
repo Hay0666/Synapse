@@ -91,11 +91,19 @@ export function Ranker({ question, items: initialItems, onSubmit }: RankerProps)
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.indexOf(active.id as string)
-        const newIndex = items.indexOf(over.id as string)
-        return arrayMove(items, oldIndex, newIndex)
-      })
+      const oldIndex = items.indexOf(active.id as string)
+      const newIndex = items.indexOf(over.id as string)
+      const newItems = arrayMove(items, oldIndex, newIndex)
+      setItems(newItems)
+      if (typeof window !== "undefined" && window.pendo) {
+        window.pendo.track("ranker_items_reordered", {
+          movedItem: active.id as string,
+          fromPosition: oldIndex + 1,
+          toPosition: newIndex + 1,
+          totalItems: items.length,
+          currentOrder: newItems.join(","),
+        })
+      }
     }
   }
 

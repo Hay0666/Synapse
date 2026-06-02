@@ -1,3 +1,5 @@
+"use client"
+
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 
@@ -43,7 +45,21 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <Button disabled className="text-xs">Save Changes</Button>
+              <Button
+                disabled
+                className="text-xs"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.pendo) {
+                    window.pendo.track("workspace_settings_saved", {
+                      changedFields: "workspace_name,workspace_url",
+                      workspaceName: "Acme Corp",
+                      workspaceUrl: "acme",
+                    })
+                  }
+                }}
+              >
+                Save Changes
+              </Button>
             </div>
           </div>
 
@@ -68,7 +84,16 @@ export default function SettingsPage() {
                   </div>
                   {/* Toggle */}
                   <div
-                    className={`relative h-5 w-9 rounded-full border transition-colors shrink-0 ${
+                    onClick={() => {
+                      if (typeof window !== "undefined" && window.pendo) {
+                        window.pendo.track("preference_toggled", {
+                          preferenceName: label,
+                          newValue: !on,
+                          previousValue: on,
+                        })
+                      }
+                    }}
+                    className={`relative h-5 w-9 rounded-full border transition-colors shrink-0 cursor-pointer ${
                       on
                         ? "bg-zinc-200 border-zinc-300"
                         : "bg-zinc-900 border-zinc-800"
@@ -102,7 +127,20 @@ export default function SettingsPage() {
                   Permanently deletes all data and members.
                 </p>
               </div>
-              <Button variant="danger" className="text-xs shrink-0" disabled>
+              <Button
+                variant="danger"
+                className="text-xs shrink-0"
+                disabled
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.pendo) {
+                    window.pendo.track("workspace_deleted", {
+                      workspaceName: "Acme Corp",
+                      memberCount: 8,
+                      planType: "Pro",
+                    })
+                  }
+                }}
+              >
                 Delete
               </Button>
             </div>

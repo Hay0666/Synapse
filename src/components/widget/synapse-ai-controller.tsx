@@ -62,7 +62,7 @@ export function SynapseAIController({ onClose }: { onClose: () => void }) {
         })
         setLoading(false)
         if (typeof window !== "undefined" && window.pendo) {
-          window.pendo.track("synapse_api_fallback", {
+          window.pendo.track("synapse_api_error", {
             route: payload.route,
             errorMessage: err?.message
               ? String(err.message).substring(0, 100)
